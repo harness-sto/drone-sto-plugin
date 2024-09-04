@@ -1,3 +1,6 @@
 dir=$(dirname "$0")
 export PATH=$dir:$PATH
-sto-plugin
+export RESULTS_PATH="${RESULTS_PATH:-/private/tmp/addon/tmp}" 
+export ADDON_PATH="${ADDON_PATH:-/private/tmp/addon/results}"  
+export CUSTOMER_ARTIFACTS_PATH="${CUSTOMER_ARTIFACTS_PATH:-/private/tmp/shared/customer_artifacts}"  
+sto-plugin --run-strategy single-container
