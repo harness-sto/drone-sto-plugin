@@ -1,6 +1,48 @@
+#!/bin/bash
+
+# Detect OS
+OS="$(uname -s)"
+case "${OS}" in
+    Linux*)     OS_NAME="linux";;
+    Darwin*)    OS_NAME="darwin";;
+    *)          echo "Unknown OS: ${OS}"; exit 1;;
+esac
+
+# Detect Architecture
+ARCH="$(uname -m)"
+case "${ARCH}" in
+    x86_64)     ARCH_NAME="amd64";;
+    amd64)      ARCH_NAME="amd64";;
+    aarch64)    ARCH_NAME="arm64";;
+    arm64)      ARCH_NAME="arm64";;
+    *)          echo "Unknown architecture: ${ARCH}"; exit 1;;
+esac
+
+# Set OS-specific paths
 dir=$(dirname "$0")
 export PATH=$dir:$PATH
-export RESULTS_PATH="${RESULTS_PATH:-/private/tmp/addon/tmp}" 
-export ADDON_PATH="${ADDON_PATH:-/private/tmp/addon/results}"  
-export CUSTOMER_ARTIFACTS_PATH="${CUSTOMER_ARTIFACTS_PATH:-/private/tmp/shared/customer_artifacts}"  
-sto-plugin --run-strategy single-container
+
+if [ "$OS_NAME" = "darwin" ]; then
+    # macOS uses /private/tmp
+    export RESULTS_PATH="${RESULTS_PATH:-/private/tmp/addon/tmp}"
+    export ADDON_PATH="${ADDON_PATH:-/private/tmp/addon/results}"
+    export CUSTOMER_ARTIFACTS_PATH="${CUSTOMER_ARTIFACTS_PATH:-/private/tmp/shared/customer_artifacts}"
+else
+    # Linux uses /tmp or /addon (Docker standard)
+    export RESULTS_PATH="${RESULTS_PATH:-/tmp/addon/tmp}"
+    export ADDON_PATH="${ADDON_PATH:-/tmp/addon/results}"
+    export CUSTOMER_ARTIFACTS_PATH="${CUSTOMER_ARTIFACTS_PATH:-/tmp/shared/customer_artifacts}"
+fi
+
+
+# Construct binary name
+BINARY="sto-plugin-${OS_NAME}-${ARCH_NAME}"
+
+# Check if binary exists
+if [ ! -f "$dir/$BINARY" ]; then
+    echo "Error: Binary $BINARY not found in $dir"
+    exit 1
+fi
+
+# Execute the binary
+"$dir/$BINARY" --run-strategy single-container
