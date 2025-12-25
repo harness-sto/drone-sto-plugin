@@ -1,22 +1,25 @@
 package main
 
 import (
+	_ "embed"
 	"fmt"
 	"os"
 	"os/exec"
-	"path/filepath"
 )
 
+//go:embed posix/script
+var script string
+
 func main() {
-	// Find the script relative to the binary location or in current working directory
-	scriptPath := findScript()
-	if scriptPath == "" {
-		fmt.Fprintln(os.Stderr, "Error: posix/script not found")
+	// Write embedded script to temp file
+	tmpFile := "/tmp/sto-script.sh"
+	if err := os.WriteFile(tmpFile, []byte(script), 0755); err != nil {
+		fmt.Fprintf(os.Stderr, "Error writing script: %v\n", err)
 		os.Exit(1)
 	}
 
 	// Execute the script
-	cmd := exec.Command("/bin/sh", scriptPath)
+	cmd := exec.Command("/bin/sh", tmpFile)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Env = os.Environ()
@@ -28,29 +31,4 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Error executing script: %v\n", err)
 		os.Exit(1)
 	}
-}
-
-func findScript() string {
-	// Try current working directory first
-	cwd, _ := os.Getwd()
-	candidates := []string{
-		filepath.Join(cwd, "posix", "script"),
-		filepath.Join(cwd, "posix/script"),
-	}
-
-	// Try relative to binary location
-	if exe, err := os.Executable(); err == nil {
-		exeDir := filepath.Dir(exe)
-		candidates = append(candidates,
-			filepath.Join(exeDir, "posix", "script"),
-			filepath.Join(exeDir, "..", "posix", "script"),
-		)
-	}
-
-	for _, path := range candidates {
-		if _, err := os.Stat(path); err == nil {
-			return path
-		}
-	}
-	return ""
 }
