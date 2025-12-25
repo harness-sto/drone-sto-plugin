@@ -6,9 +6,10 @@ on:
       - 'v*'
   workflow_dispatch:
     inputs:
-      tag:
-        description: 'Tag name (eg. v1.0.0)'
+      tags:
+        description: 'Comma-separated tags (e.g., v1.0.0,latest)'
         required: true
+        default: 'latest'
 
 permissions:
   contents: write
@@ -39,14 +40,29 @@ jobs:
           zstd release/sto-plugin-linux-arm64
           zstd release/sto-plugin-darwin-arm64
 
-      - name: Create Release
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: ${{ github.event.inputs.tag }}
-          name: Release ${{ github.event.inputs.tag }}
-          files: |
-            release/sto-plugin-linux-amd64.zst
-            release/sto-plugin-linux-arm64.zst
-            release/sto-plugin-darwin-arm64.zst
+      - name: Create releases for all tags
+        run: |
+          TAGS="${{ github.event.inputs.tags }}"
+          IFS=',' read -ra TAG_ARRAY <<< "$TAGS"
+          
+          for TAG in "${TAG_ARRAY[@]}"; do
+            TAG=$(echo "$TAG" | xargs)  # trim whitespace
+            echo "Creating/updating release for tag: $TAG"
+            
+            # Create tag if it doesn't exist
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git tag -f "$TAG"
+            git push origin "$TAG" -f
+            
+            # Create/update release
+            gh release delete "$TAG" --yes 2>/dev/null || true
+            gh release create "$TAG" \
+              --title "Release $TAG" \
+              --notes "Release $TAG" \
+              release/sto-plugin-linux-amd64.zst \
+              release/sto-plugin-linux-arm64.zst \
+              release/sto-plugin-darwin-arm64.zst
+          done
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
