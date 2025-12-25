@@ -31,13 +31,13 @@ jobs:
           mkdir -p release
 
           # Linux amd64
-          cp posix/sto-plugin-linux-amd64 sto-binary
+          cp posix/sto-plugin-linux-amd64 sto-plugin-binary
           GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -ldflags "-s -w" -o release/sto-plugin-linux-amd64
           # Linux arm64  
-          cp posix/sto-plugin-linux-arm64 sto-binary
+          cp posix/sto-plugin-linux-arm64 sto-plugin-binary
           GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -ldflags "-s -w" -o release/sto-plugin-linux-arm64
           # Darwin arm64
-          cp posix/sto-plugin-darwin-arm64 sto-binary
+          cp posix/sto-plugin-darwin-arm64 sto-plugin-binary
           GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 go build -ldflags "-s -w" -o release/sto-plugin-darwin-arm64
 
       - name: Compress with zstd
