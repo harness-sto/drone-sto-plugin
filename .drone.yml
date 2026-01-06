@@ -198,29 +198,47 @@ trigger:
 ---
 kind: pipeline
 type: docker
-name: manifest
+name: release-binaries
+
+platform:
+  arch: amd64
+  os: linux
 
 steps:
-- name: manifest
-  image: plugins/manifest
+- name: build
+  image: golang:1.22
+  commands:
+  - GOOS=linux   GOARCH=amd64 CGO_ENABLED=0 go build -ldflags "-s -w" -o release/sto-plugin-linux-amd64
+  - GOOS=linux   GOARCH=arm64 CGO_ENABLED=0 go build -ldflags "-s -w" -o release/sto-plugin-linux-arm64
+  - GOOS=darwin  GOARCH=amd64 CGO_ENABLED=0 go build -ldflags "-s -w" -o release/sto-plugin-darwin-amd64
+  - GOOS=darwin  GOARCH=arm64 CGO_ENABLED=0 go build -ldflags "-s -w" -o release/sto-plugin-darwin-arm64
+
+- name: compress
+  image: ubuntu:22.04
+  commands:
+  - apt-get update && apt-get install -y zstd
+  - zstd release/sto-plugin-linux-amd64
+  - zstd release/sto-plugin-linux-arm64
+  - zstd release/sto-plugin-darwin-amd64
+  - zstd release/sto-plugin-darwin-arm64
+
+- name: release
+  image: plugins/github-release
   settings:
-    auto_tag: "true"
-    ignore_missing: "true"
-    spec: docker/manifest.tmpl
-    username:
-      from_secret: docker_username
-    password:
-      from_secret: docker_password
+    files:
+    - release/sto-plugin-linux-amd64.zst
+    - release/sto-plugin-linux-arm64.zst
+    - release/sto-plugin-darwin-amd64.zst
+    - release/sto-plugin-darwin-arm64.zst
+    api_key:
+      from_secret: github_token
+  when:
+    event:
+    - tag
 
 trigger:
   event:
-  - push
   - tag
 
 depends_on:
 - linux-amd64
-- linux-arm64
-- linux-arm
-- windows-1909-amd64
-- windows-1903-amd64
-- windows-1809-amd64
