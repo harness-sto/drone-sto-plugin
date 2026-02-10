@@ -33,7 +33,9 @@ fi
 
 # Construct binary name
 BINARY="sto-plugin-${OS_NAME}-${ARCH_NAME}"
-export BINARY_PATH=$(find /Users -path "*/harness/*" -prune -o -type f -path "*/.cache/*" -name "${BINARY}" -print | head -n 1)
+export BINARY_PATH=$(find $( [ -d /Users ] && echo /Users ) $( [ -d /home/harness ] && echo /home/harness ) \
+  -path "*/harness/*" -prune -o \
+  -path "*/.cache/*" -type f -name ${BINARY} -print | head -n 1)
 
 # Check if binary exists
 if [ -z "$REAL_BINARY_PATH" ] || [ ! -x "$REAL_BINARY_PATH" ]; then
