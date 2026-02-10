@@ -18,10 +18,6 @@ case "${ARCH}" in
     *)          echo "Unknown architecture: ${ARCH}"; exit 1;;
 esac
 
-# Set OS-specific paths
-dir=$(dirname "$0")
-export PATH=$dir:$PATH
-
 if [ "$OS_NAME" = "darwin" ]; then
     # macOS uses /private/tmp
     export RESULTS_PATH="${RESULTS_PATH:-/private/tmp/addon/tmp}"
@@ -37,12 +33,13 @@ fi
 
 # Construct binary name
 BINARY="sto-plugin-${OS_NAME}-${ARCH_NAME}"
+export BINARY_PATH=$(find /Users -path "*/harness/*" -prune -o -type f -path "*/.cache/*" -name "${BINARY}" -print | head -n 1)
 
 # Check if binary exists
-if [ ! -f "$dir/$BINARY" ]; then
-    echo "Error: Binary $BINARY not found in $dir"
+if [ -z "$REAL_BINARY_PATH" ] || [ ! -x "$REAL_BINARY_PATH" ]; then
+    echo "Error: sto-plugin binary not found via search path"
     exit 1
 fi
 
 # Execute the binary
-"$dir/$BINARY" --run-strategy single-container
+exec "$BINARY_PATH" --run-strategy single-container
