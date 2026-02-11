@@ -18,10 +18,6 @@ case "${ARCH}" in
     *)          echo "Unknown architecture: ${ARCH}"; exit 1;;
 esac
 
-# Set OS-specific paths
-dir=$(dirname "$0")
-export PATH=$dir:$PATH
-
 if [ "$OS_NAME" = "darwin" ]; then
     # macOS uses /private/tmp
     export RESULTS_PATH="${RESULTS_PATH:-/private/tmp/addon/tmp}"
@@ -37,12 +33,29 @@ fi
 
 # Construct binary name
 BINARY="sto-plugin-${OS_NAME}-${ARCH_NAME}"
+SEARCH_ROOTS=()
+if [ "$OS_NAME" = "darwin" ]; then
+    [ -d /Users/anka/.cache ] && SEARCH_ROOTS+=("/Users/anka/.cache")
+else
+    [ -d /home/harness/.cache ] && SEARCH_ROOTS+=("/home/harness/.cache")
+    [ -d /home/ubuntu/.cache ] && SEARCH_ROOTS+=("/home/ubuntu/.cache")
+    # Fallback to the broader /home tree only if no specific home directories were found
+    [ "${#SEARCH_ROOTS[@]}" -eq 0 ] && [ -d /home ] && SEARCH_ROOTS+=("/home")
+fi
+
+if [ "${#SEARCH_ROOTS[@]}" -gt 0 ]; then
+    echo "searching dir: ${SEARCH_ROOTS[@]}"
+    export BINARY_PATH=$(find "${SEARCH_ROOTS[@]}" \
+        -path "*/data/posix/${BINARY}" -type f -print | head -n 1)
+else
+    BINARY_PATH=""
+fi
 
 # Check if binary exists
-if [ ! -f "$dir/$BINARY" ]; then
-    echo "Error: Binary $BINARY not found in $dir"
+if [ -z "$BINARY_PATH" ] || [ ! -x "$BINARY_PATH" ]; then
+    echo "Error: ${BINARY} binary not found via search path"
     exit 1
 fi
 
 # Execute the binary
-"$dir/$BINARY" --run-strategy single-container
+exec "$BINARY_PATH" --run-strategy single-container
