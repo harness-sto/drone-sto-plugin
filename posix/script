@@ -35,18 +35,18 @@ fi
 BINARY="sto-plugin-${OS_NAME}-${ARCH_NAME}"
 SEARCH_ROOTS=()
 if [ "$OS_NAME" = "darwin" ]; then
-    [ -d /Users ] && SEARCH_ROOTS+=("/Users")
+    [ -d /Users/anka/.cache ] && SEARCH_ROOTS+=("/Users/anka/.cache")
 else
-    [ -d /home/harness ] && SEARCH_ROOTS+=("/home/harness")
-    [ -d /home/ubuntu ] && SEARCH_ROOTS+=("/home/ubuntu")
+    [ -d /home/harness/.cache ] && SEARCH_ROOTS+=("/home/harness/.cache")
+    [ -d /home/ubuntu/.cache ] && SEARCH_ROOTS+=("/home/ubuntu/.cache")
     # Fallback to the broader /home tree only if no specific home directories were found
     [ "${#SEARCH_ROOTS[@]}" -eq 0 ] && [ -d /home ] && SEARCH_ROOTS+=("/home")
 fi
 
 if [ "${#SEARCH_ROOTS[@]}" -gt 0 ]; then
+    echo "searching dir: ${SEARCH_ROOTS[@]}"
     export BINARY_PATH=$(find "${SEARCH_ROOTS[@]}" \
-        -path "*/harness/*" -prune -o \
-        -path "*/.cache/*" -type f -name "${BINARY}" -print | head -n 1)
+        -path "*/data/posix/${BINARY}" -type f -print | head -n 1)
 else
     BINARY_PATH=""
 fi
