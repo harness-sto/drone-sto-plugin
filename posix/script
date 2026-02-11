@@ -39,6 +39,7 @@ if [ "$OS_NAME" = "darwin" ]; then
 else
     [ -d /home/harness ] && SEARCH_ROOTS+=("/home/harness")
     [ -d /home/ubuntu ] && SEARCH_ROOTS+=("/home/ubuntu")
+    # Fallback to the broader /home tree only if no specific home directories were found
     [ "${#SEARCH_ROOTS[@]}" -eq 0 ] && [ -d /home ] && SEARCH_ROOTS+=("/home")
 fi
 
