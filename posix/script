@@ -44,7 +44,7 @@ else
 fi
 
 if [ "${#SEARCH_ROOTS[@]}" -gt 0 ]; then
-    export BINARY_PATH=$(sudo find "${SEARCH_ROOTS[@]}" \
+    export BINARY_PATH=$(find "${SEARCH_ROOTS[@]}" \
         -path "*/harness/*" -prune -o \
         -path "*/.cache/*" -type f -name "${BINARY}" -print | head -n 1)
 else
