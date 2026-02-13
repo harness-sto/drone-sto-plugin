@@ -36,8 +36,8 @@ BINARY="sto-plugin-${OS_NAME}-${ARCH_NAME}"
 
 # Use CLONE_CACHE_PATH if set, otherwise fallback to find
 echo "BINARY_ROOT_DIR: ${CLONE_CACHE_PATH}"
-if [ -n "$CLONE_CACHE_PATH" ] && [ -x "${CLONE_CACHE_PATH}/data/posix/${BINARY}" ]; then
-    export BINARY_PATH="${CLONE_CACHE_PATH}/data/posix/${BINARY}"
+if [ -n "$CLONE_CACHE_PATH" ] && [ -x "${CLONE_CACHE_PATH}/posix/${BINARY}" ]; then
+    export BINARY_PATH="${CLONE_CACHE_PATH}/posix/${BINARY}"
 else
     # Fallback: search for binary using find
     SEARCH_ROOTS=()
